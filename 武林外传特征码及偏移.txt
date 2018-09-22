@@ -1,0 +1,858 @@
+2018年8月16日更新
+=================================================================================================================
+0xDE4660	基址
+
+特征码
+SUB r32,const
+MOV r32,DWORD PTR DS:[const]
+PUSH r32
+PUSH r32
+PUSH r32
+MOV r32,DWORD PTR DS:[EAX+const]
+PUSH const
+MOV r32,r32
+=================================================================================================================
+人物信息偏移
+
+// 偏移
+	//	0x3C	X	
+	//	0x40	H	
+	//	0x44	Y	
+	//	0x7E4	人物名称
+	//	0x270	等级
+	//	0x2A0	血上限偏移
+	//	0x280	血偏移
+	//	0x2A4	蓝上限偏移
+	//	0x284	蓝偏移
+	//	0x2D8	攻击下限
+	//	0x2DC	攻击上限	
+	//	0x2E0	命中
+	//	0x2E4	防御	
+	//	0x2E8	闪躲
+
+00471826 - 8B 8E 80020000  - mov ecx,[esi+00000280] 
+ECX=000000F7
+ESI=2347ED28
+
+// this
+0040B679 - 8B 41 2C  - mov eax,[ecx+2C] 
+EAX=2347ED28
+ECX=055B0910
+
+0044F92D - 8B 41 1C  - mov eax,[ecx+1C] 
+EAX=055B0910
+ECX=00DDCCD8
+
+008F2560 - A1 A08EDD00 - mov eax,[基址] 
+EAX=00DDCCD8
+
+
+CE查找具体血值，仅找到血偏移即可推出其他偏移
+=================================================================================================================
+动作
+
+特征码
+MOV EAX,DWORD PTR DS:[const]
+PUSH ESI
+PUSH EDI
+MOV EDI,ECX
+MOV ECX,DWORD PTR DS:[EAX+const]
+MOV ESI,DWORD PTR DS:[ECX+const]
+TEST ESI,ESI
+jcc const
+
+打坐动作
+MOV EAX,DWORD PTR DS:[ESI+0x858]         ;  Case 0 esi=[[[基址]+1C]+2C]
+MOV ECX,ESI
+SHR EAX,0x5
+NOT AL
+AND AL,0x1
+PUSH EAX
+  CALL elementc.0046D090
+
+走跑动作
+MOV CL,BYTE PTR DS:[ESI+0x6E8]           ;  Case 1 esi=[[[基址]+1C]+2C]
+TEST CL,CL
+SETE CL
+PUSH ECX
+MOV ECX,ESI
+  CALL elementc.0046D0C0
+
+攻击动作
+PUSH -0x1                                ;  Case 2
+PUSH 0x0
+PUSH 0x0
+PUSH 0x0
+MOV ECX,ESI
+  CALL elementc.0046D260
+
+助攻动作
+MOV ECX,ESI                              ;  Case 4
+  CALL elementc.0046D490
+
+组队动作
+MOV ECX,ESI                              ;  Case 5
+  CALL elementc.0046DEA0
+
+离队动作
+MOV ECX,ESI                              ;  Case 6
+  CALL elementc.0046E450
+
+交易动作
+MOV ECX,ESI                              ;  Case 9
+  CALL elementc.0046E570
+
+摆摊动作
+MOV ECX,ESI                              ;  Case A
+  CALL elementc.0046E5D0
+
+表情动作
+MOV EDX,DWORD PTR DS:[EDI+0xC]           ;  Case C 
+MOV ECX,ESI
+PUSH EDX
+  CALL elementc.0046E600
+
+拾取动作
+MOV ECX,ESI                              ;  Case F
+  CALL elementc.0046D4D0
+
+=========
+过滤拾取调用
+特征码
+  jcc const
+  MOV ECX,DWORD PTR SS:[ESP+const]
+  MOV DWORD PTR DS:[EAX],0x0
+  MOV EAX,DWORD PTR SS:[ESP+const]
+  PUSH EAX
+  PUSH ECX
+  PUSH EDI
+  CALL const
+
+代码（两种ID可以在地面物品信息里获得）
+  PUSH EAX			0
+  PUSH ECX			物品ID
+  PUSH EDI			物品随机ID
+  CALL elementc.0079B650
+  ADD ESP,0xC
+=========
+
+以上调用是send断点找到打坐，而打坐为动作功能之一，之后推导得出所有动作。
+以上switch表结构，从0x0~0x12，其中0x3、0x7、0x8、0xb、0xd、0xe为空调用。
+而0x10、0x11、0x12为未知调用。
+=================================================================================================================
+快捷键 F1~F8
+004E8C0D - 89 1C B8   - mov [eax+edi*4],ebx
+EBX=00000000
+EDI=00000000
+EAX=22476A90
+
+004E8BFA - 8B 4E 0C  - mov ecx,[esi+0C]
+ECX=22476A90
+ESI=22476B58
+
+00629B3A - 8B 8C A8 B0150000  - mov ecx,[eax+ebp*4+000015C8] 
+ECX=22476B58
+EBP=00000001
+EAX=261B4D28
+
+006FC013 - 8B 59 2C  - mov ebx,[ecx+2C] 
+EBX=261B4D28
+ECX=055B0910
+
+006FC008 - 8B 48 1C  - mov ecx,[eax+1C]
+ECX=055B0910
+EAX=00DDCCD8
+
+00453760 - A1 A08EDD00 - mov eax,[基址] 
+
+快捷键 1~0
+004E8C0D - 89 1C B8   - mov [eax+edi*4],ebx 
+EBX=00000000
+EDI=00000000
+EAX=0C54D240
+
+004E8BFA - 8B 4E 0C  - mov ecx,[esi+0C]
+ECX=0C54D240
+ESI=22476AE0
+
+00629B11 - 8B 8C B0 A4150000  - mov ecx,[eax+esi*4+000015BC] 
+ECX=22476AE0
+ESI=00000001
+EAX=261B4D28
+
+006FC013 - 8B 59 2C  - mov ebx,[ecx+2C] 
+EBX=261B4D28
+ECX=055B0910
+
+007597DE - 8B 48 1C  - mov ecx,[eax+1C] 
+ECX=055B0910
+EAX=00DDCCD8
+
+0042C789 - A1 A08EDD00 - mov eax,[基址] 
+
+特征码：（两种快捷键特征码一致，mov ecx,[eax+esi*4+0000xxxx]的特征码，较大的偏移是Fn）
+  OR ECX,0xFFFFFFFF
+  XOR EAX,EAX
+  REPNE SCAS BYTE PTR ES:[EDI]
+  NOT ECX
+  DEC ECX
+  ADD ECX,ESI
+  PUSH ECX
+  CALL EBP
+
+CE查找快捷键位0和非0，找到数组偏移。
+=================================================================================================================
+tab选怪特征码
+MOV EAX,DWORD PTR SS:[ESP+0x4]
+PUSH ESI
+MOV ESI,DWORD PTR DS:[EAX]
+CMP ESI,const
+jcc const
+jcc const
+SUB ESI,const
+CMP ESI,const
+
+PUSH EAX                                 ;  Case 145 EAX=145h实际仅是操作栈平衡没有其他意义
+  CALL elementc.0047D760
+
+以上为一个switch结构的开头部分，向下找到case 0x145为选怪。
+此switch非常庞大，而且调用简单，疑似各种快捷键的调用。
+日后详推。
+
+大部分case的调用都有一个隐藏参数ecx，由上一步调用产生。
+上一步调用高度怀疑为虚函数调用，ecx便是this指针首地址。
+而ecx的值即[[基址]+1c]+2c
+
+教程查找快捷键调用的方法疑似有问题。
+所以更改为下send断点，按tab断下后，在栈帧中逐级找到调用处。
+
+指定选怪
+特征码
+  CMP ESI,EDI
+  jcc const
+  MOV DWORD PTR SS:[EBP+const],ESI
+  MOV EAX,DWORD PTR DS:[const]
+  PUSH ESI
+  MOV ECX,DWORD PTR DS:[EAX+const]
+  ADD ECX,const
+  CALL const
+
+代码
+MOV EAX,[基址]
+PUSH npcid		可以根据npc信息得到的数据进行筛选
+MOV ECX,[EAX+0x20]
+ADD ECX,0x270
+  CALL elementc.0074CD10
+=================================================================================================================
+死亡回城特征码
+CALL const
+LEA ECX,DWORD PTR DS:[EAX+const]
+CALL const
+RETN const
+
+  CALL elementc.0074CDD0
+
+第一个CALL的返回值EAX+0x270为第二个CALL（执行回城）的参数（疑似this）。而EAX=[[基址]+0x20]。
+=================================================================================================================
+选怪NPC状态（选中其他玩家此处也是1，并与后面NPC是否选中的偏移有关联）
+0091AFA5 - C7 46 3C 01000000 - mov [esi+3C],00000001
+ESI=124238C8
+
+// 
+特征码：有俩处，第一行的const不同，1674和1670（第二个），第五行的const都是3C
+  MOV ECX,DWORD PTR DS:[ESI+const]
+  MOV EDI,EAX
+  TEST EDI,EDI
+  jcc const
+  MOV EAX,DWORD PTR DS:[ECX+const]
+  TEST EAX,EAX
+  jcc const
+  PUSH const
+
+0048F845 - 8B 8E 70160000  - mov ecx,[esi+00001670] 
+ECX=124238C8
+ESI=236D6BB8
+
+[[[基址]+1C]+2C]略...
+
+[[[[[基址]+1C]+2C]+00001674]+3C]
+
+课程更新的内容是用字节查找疑似有误，该偏移查找使用4字节。
+CE选择怪物和取消怪物
+=================================================================================================================
+背包格子
+					    ; 20 道具数量
+					    ;  C 道具id
+					    ;  8 类型
+004CAA54 - 8B 0C B8   - mov ecx,[eax+edi*4] ;  0 非空代表有物品
+ECX=31E09CD8		//物品地址
+EDI=00000000		//index
+EAX=1E06D418
+
+//背包格this下偏移
+				    14	背包格子数
+004CB442 - 8B 47 0C  - mov eax,[edi+0C] 背包格子指针数组
+EAX=1E06D418
+EDI=1C2B73C8
+
+//背包this
+//特征码：
+  XOR ECX,ECX
+  PUSH 0x0
+  MOV CL,BYTE PTR DS:[EDI+const]
+  PUSH ECX
+  MOV ECX,DWORD PTR DS:[ESI+const]
+  CALL const
+  TEST EAX,EAX
+  jcc const
+
+00471FFA - 8B 8E 4C150000  - mov ecx,[esi+00001554] 
+ECX=1C2B73C8
+ESI=237BFB68
+
+[[基址]+1c]+2c略……
+
+CE查找包裹某物品的数量，使用该物品继续查找该物品数量。
+
+使用背包道具的调用
+  PUSH const			
+  PUSH EDX
+  PUSH EAX
+  PUSH ECX
+  LEA ECX,DWORD PTR DS:[EDI+const]	
+  CALL const
+
+代码
+  PUSH 0x1				;不明确始终是1			
+  PUSH EDX				;物品id
+  PUSH EAX				;道具所在格
+  PUSH ECX
+  LEA ECX,DWORD PTR DS:[EDI+0x270]	;[[基址]+20]+0x270
+  CALL elementc.0074CAC0
+
+移动背包单个道具的调用
+特征码
+  MOV EDX,DWORD PTR SS:[ESP+const]
+  MOV ECX,DWORD PTR SS:[ESP+const]
+  PUSH 0x0
+  PUSH EBP
+  PUSH EDX
+  CALL const
+  PUSH const
+  PUSH ESI
+
+代码
+  PUSH 0x0			;因为单个物品所以没有数量要求,恒定0
+  PUSH EBP			;目标格
+  PUSH EDX			;道具所在格
+    CALL elementc.00761390	;stdcall....游戏的程序员有点二，同样要求的两个函数,调用规范居然是两样.
+
+移动背包成组道具的调用
+特征码
+  CALL const
+  MOV EAX,DWORD PTR SS:[ESP+const]
+  PUSH EAX
+  PUSH EBX
+  PUSH EDI
+  CALL const
+  ADD ESP,0xC
+  POP EDI
+
+代码  
+  PUSH const		;移动物品的数量
+  PUSH const		;目标格
+  PUSH const		;道具所在格
+  CALL elementc.0079CFD0
+  ADD ESP,0xC		;清理调用栈，cdecl调用规范
+
+扔出背包的道具调用
+特征码
+  PUSH const
+  PUSH ESI
+  PUSH const
+  CALL const
+  MOV EAX,DWORD PTR SS:[ESP+const]
+  PUSH EAX
+  PUSH ESI
+  CALL const
+
+代码
+  PUSH EAX			;扔出道具的数量
+  PUSH ESI			;扔出道具所在格
+  CALL elementc.007613D0
+
+以上调用的格子数0~总背包数减1。调用时背包窗口打开与否皆可。
+以上找法都是send断点。
+=================================================================================================================
+技能调用
+
+特征码：
+PUSH const
+PUSH const
+PUSH const
+PUSH const
+PUSH const
+PUSH r32
+CALL const
+MOV r8,const
+（有两个相同特征调用，唯一不同是第一行，怀疑两个职业或性别有所不同）
+
+MOV ECX,DWORD PTR DS:[基址]
+MOV ECX,DWORD PTR DS:[ECX+0x1C]
+MOV ECX,DWORD PTR DS:[ECX+0x2C]
+PUSH 0x1
+PUSH 0x0
+PUSH -0x1
+PUSH 0x0
+PUSH 0x0
+PUSH EAX
+  CALL elementc.00488C80
+
+EAX的值决定了技能，2=清风破，3=震烈击，4E=回城术
+快捷键（F1~F8）放入技能，CE手动添加地址找到指定快捷键数组位置，取出数组元素
+再次手动添加地址，将取出的十六进制值作为地址，选择查看访问此地址的代码
+游戏触发技能列出访问数据代码
+通过OD查看CE列出的代码地址并下断
+游戏触发快捷键的技能
+根据断点找到技能调用
+
+特征码:
+  MOV ECX,DWORD PTR DS:[ESI+const]
+  MOV ECX,DWORD PTR DS:[ECX+EDI*4]
+  CALL const
+  MOV EAX,DWORD PTR DS:[ESI+const]
+  INC EDI
+  CMP EDI,EAX
+  jcc const
+  MOV EAX,DWORD PTR DS:[ESI+const]
+
+[[[0DE4660]+0x1C]+2C]+1630		职业技能数组
+[[[0DE4660]+0x1C]+2C]+1634		职业技能数量，记作x
+
+                                +0   ;this
+				+4   ;未知
+[[[[[0DE4660]+1C]+2C]+1630]+x*4]+8   ;技能ID
+				+C   ;冷却时间递减（毫秒）
+				+10  ;冷却时间初值（毫秒）
+=================================================================================================================
+聊天调用
+
+特征码：
+jcc const
+CMP r8,const
+jcc const
+CMP r8,const
+jcc const
+MOV r32,DWORD PTR SS:[ESP+const]
+MOV r32,DWORD PTR SS:[ESP+const]
+MOV r32,DWORD PTR SS:[ESP+const]
+（下面第一个call）
+
+调用方式：队聊(聊天内容前插两个感叹号)
+PUSH EAX			;-1
+PUSH ECX			;-1
+PUSH EDI			;字符串指针
+PUSH EDX			;任意值。。。
+MOV ECX,EBX			;[[基址]+20]
+  CALL elementc.007544F0
+
+密语
+
+特征码
+  PUSH ECX
+  PUSH EDX
+  PUSH 0x0
+  PUSH 0x0
+  PUSH EDI
+  PUSH EAX
+  MOV ECX,EBX
+  CALL const
+
+代码
+mov ecx,[基址]
+mov ecx,[ecx+20]
+push -1
+push -1
+push 0
+push 0
+push 聊天的内容
+push 密的人名
+  CALL elementc.00754F00
+
+下send断点，在栈帧中找到聊天调用
+=================================================================================================================
+查找目的地坐标
+
+查找过程：
+写入函数
+0049D34E - 89 56 1C  - mov [esi+1C],edx
+EDX=43BFD628		;浮点数
+ESI=035EC9C0
+
+调用写入函数之前的准备函数
+00498926 - 8B 0C AA   - mov ecx,[edx+ebp*4] 
+ECX=035EC9C0
+EBP=00000001
+EDX=1DCED8B8
+
+00498922 - 8B 56 30  - mov edx,[esi+30] 
+EDX=1DCED8B8
+ESI=1DD66878
+
+//特征码：第一行const=15E4，第二行是执行代码的第一个call
+MOV ECX,DWORD PTR DS:[EDI+const]	
+CALL const			
+MOV ESI,EAX
+LEA EAX,DWORD PTR SS:[ESP+const]
+PUSH EAX
+PUSH EBX
+MOV ECX,ESI
+CALL const
+
+0048D0D5 - 8B 8F CC150000  - mov ecx,[edi+000015E4] 
+ECX=1DD66878
+EDI=1D07F308
+
+[[[基址]+1C]+2C]等略……。
+
+[[[[[[基址]+1C]+2C]+000015E4]+30]+1*4]+1C
+
+代码:
+mov     ecx, [[[[基址]+1C]+2C]+15E4h]
+  // 特征码的第二行
+  CALL elementc.00498380
+
+...
+
+mov     ecx, [[[[基址]+1C]+2C]+15E4h]
+push    0
+push    1
+push    esi	;第一个call的返回值
+push    1
+  // 从特征码下数第四个call
+  CALL elementc.004988B0
+
+第一次调用类似于构造，有分配空间代码
+第四次调用初始化
+两者之间还有两个调用，省略之间调用依然可以移动，但以上并非自动寻路，遇见阻碍即停止移动
+
+
+mov [[[[[[基址]+1C]+2C]+000015E4]+30]+1*4]+1C,x
+mov [[[[[[基址]+1C]+2C]+000015E4]+30]+1*4]+24,y
+
+使用CE查找当前坐标的数值，该数值多为浮点数，因小数误差，应查找该数值±1之间的范围
+当点击某目的地，程序就直接记录该处的坐标，所以尽量点击较远的目的地，以使当前与目的地数值有较大差异
+
+
+
+根据两个移动调用设置断点，然后在游戏小地图点击移动，断下后在栈帧内查找自动寻路调用，得到如下：
+
+特征码：
+PUSH ESI
+FSTP DWORD PTR SS:[ESP+const]
+LEA r32,DWORD PTR SS:[ESP+const]
+PUSH const
+FSTP DWORD PTR SS:[ESP+const]
+PUSH r32
+MOV r32,const
+FSTP DWORD PTR SS:[ESP+const]
+        
+  CALL elementc.00433C50
+
+以上是压入三个参数和this，参数1=当前坐标地址（[[[基址]+1C]+2C]+828的地址（大小12个字节），包含X、H、Y的数据）；
+参数2=目的地坐标地址（（大小12个字节）包含X、H、Y的数据）；参数3=一个标识数据总是Ah（[[[[基址]+1c]+10]+90]）.
+以上第四、七行都是常量（随更新而变化）
+参数顺序是stdcall 参数是从下往上数123
+=================================================================================================================
+NPC信息(怪物npc、人物npc）
+
+					        3C  X
+					        40  H
+					        44  Y
+					        B4  npc类型7为人物 6为怪物
+					       114  id?  // 
+					       120  等级
+					       2C8  名称指针
+00674EDE - 8B 85 30010000  - mov eax,[ebp+00000130] 血
+EAX=00000045
+EBP=036DE060
+[[[[[[[基址]+1C]+10]+24]+58]+ebp*4]+00000130] 血
+	
+
+00515EA2 - 8B 04 A9   - mov eax,[ecx+ebp*4] 
+EAX=036DE060
+EBP=0000002A	;指针数组的索引
+ECX=08862070
+
+                                    5C  当前怪总数
+00515E9F - 8B 4F 58  - mov ecx,[edi+58] 当前npc指针数组
+ECX=08862070
+EDI=08759C68
+
+
+npc的this
+
+0048E90E - 8B 4A 24  - mov ecx,[edx+24] 
+ECX=08759C68
+EDX=08A38298
+
+0048EA33 - 8B 6A 10  - mov ebp,[edx+10] 
+EBP=08A38298
+EDX=05750910
+
+0048ED29 - 8B 68 1C  - mov ebp,[eax+1C] 
+EBP=05750910
+EAX=00DDCCD8
+
+0048ED20 - A1 A08EDD00 - mov eax,[基址] 
+
+用怪物血值找到以上数据，将怪打死估算大概血值，CE查找两数之间，以估值±50（或更大）作为参数
+首次查找之前要选中怪物
+
+课程中断点得到数组偏移的方法已经不适用，因偏移代码处在一个线程中不断的运行，下断后没等点怪就断下了
+所以从后面几课的内容加ida中重新分析得到依据
+分析中还有一个特殊情况，只有怪物被选中的时候HP才有数据
+
+选择的NPC ID
+特征码：
+PUSH ESI
+MOV ESI,ECX
+MOV EAX,DWORD PTR DS:[ESI+const]
+TEST EAX,EAX
+jcc const
+MOV ECX,DWORD PTR DS:[const]
+MOV EDX,DWORD PTR DS:[ECX+const]
+MOV ECX,EAX
+第二行的ESI=[[[基址]+1C]+2C]
+第三行为MOV EAX,DWORD PTR DS:[ESI+0x142C]，142C更新可能会变
+如果选择了npc这里返回非零即npc的id（高4位0即人物，8即NPC，十六进制）
+
+打开NPC对话框调用
+特征码
+  jcc const
+  MOV ECX,DWORD PTR DS:[ESI+const]
+  MOV EDX,DWORD PTR DS:[const]
+  PUSH ECX
+  MOV ECX,DWORD PTR DS:[EDX+const]
+  ADD ECX,const
+  CALL const
+  jmp const
+
+代码
+  PUSH [NPCID]				
+  MOV ECX,DWORD PTR DS:[基址]
+  MOV ECX,DWORD PTR DS:[EDX+0x20]
+  ADD ECX,0x270				this=[[基址]+20]+270
+  CALL elementc.0074D0B0
+
+下send断点找到。被断时两种情况，当点击选择NPC时会断，打开对话框也会断
+如果没有选择时双击断点一定是选择，所以双击并不正确，应该分两次单击
+第一次不下断 NPCID可以在附近NPC信息中得到，根据信息移动到NPC旁边，然后push NPCID 后调用
+
+关闭NPC对话框状态...
+特征码（第二行即偏移）
+  XOR EAX,EAX
+  MOV DWORD PTR DS:[ECX+const],EAX
+  MOV BYTE PTR DS:[ECX+const],AL
+  MOV DWORD PTR DS:[ECX+const],EAX
+  RETN
+
+
+004908F8 - 88 81 51140000  - mov [ecx+00001451],al 
+ECX=26CE2DC8
+EAX=00000000
+
+ecx=[[基址]+20]...略
+
+这里CE查找1和0。
+
+关闭NPC对话框调用
+调用特征码
+  PUSH EDI
+  CALL const
+  TEST AL,AL
+  jcc const
+  POP EDI
+  MOV AL,const
+  POP ESI
+  RETN const
+  （第二行就是关闭调用，调用有一个ecx的this，见下面参数特征码）
+
+参数特征码
+  MOV ECX,DWORD PTR DS:[const]
+  MOV EAX,DWORD PTR DS:[ECX+const]
+  MOV ECX,DWORD PTR DS:[EAX+const]
+  CALL const
+  MOV ESI,EAX
+  MOV EAX,DWORD PTR DS:[EDI+const]
+  TEST EAX,EAX
+  jcc const
+  （下面第一个call）
+参数特征码第三行是[[[基址]+1c]+c],第五行的eax是第四行调用的返回值+8,从这里往下有一个调用处理得到588
+所以[[[[[基址]+1c]+c]+8]+588]就是这个this
+
+代码
+mov ecx,[基址]
+mov ecx,[ecx+1c]
+mov ecx,[ecx+0c]
+mov ecx,[ecx+8]
+mov ecx,[ecx+588]
+push EDI		;offset string 	一个ASCII的"IDCANCEL"字符串的指针
+  CALL elementc.009B10F0
+
+
+打开NPC二级对话框
+
+仓库二级
+
+特征码（第四行就是call）
+  JMP const
+  PUSH EBX
+  PUSH const
+  CALL const
+  ADD ESP,0x8
+  JMP const
+  CMP EAX,const
+  jcc const
+调用代码
+push 0
+push 00DE2D20
+  CALL elementc.0079DC90
+ADD ESP,0x8
+
+存取仓库物品（窗口必须打开时）
+    此调用有3种逻辑
+	1、当指定的仓库和背包格子索引处都无道具则什么都不做。
+	2、当俩处格子都有道具则交互道具。
+	3、当一有、一无时则将有处道具移至无处。
+特征码（最后一行是call）
+  ADD EAX,const
+  PUSH EBX
+  PUSH EAX
+  MOV ECX,ESI
+  CALL const
+  PUSH EDI
+  PUSH EBX
+  CALL const
+
+代码
+push 0起始背包格索引
+push 0起始仓库格索引
+  CALL elementc.0079B8E0
+add esp,8
+
+买药调用
+特征码（6是call）
+  CALL const
+  JMP const
+  MOV EAX,DWORD PTR SS:[ESP+const]
+  PUSH EAX
+  PUSH ECX
+  CALL const
+  ADD ESP,0x8
+
+代码
+  PUSH EAX			结构指针三个dword字段(药品id,药品所在格,购入数量)
+  PUSH ECX			请求的ID 只能是1
+  CALL elementc.0079D390
+  ADD ESP,8
+
+卖物调用
+特征码
+  POP EDI
+  POP ESI
+  MOV EDX,DWORD PTR SS:[ESP+const]
+  PUSH EDX
+  PUSH EBP
+  CALL const
+  ADD ESP,const
+  POP EBP
+代码
+  PUSH EDX			结构指针三个dword字段(物品id,物品所在格,出售数量)
+  PUSH EBP			始终是1
+  CALL elementc.0079D490
+  ADD ESP,0x8
+
+因为每次关闭npc对话框都会更新关闭NPC对话框状态，所以在上述特征码断点就能得到调用栈帧。
+=================================================================================================================
+地面物品
+
+
+						      3C   ;X
+						      44   ;Y	
+						     104   ;随机ID
+						     108   ;物品ID			   
+00729E23 - D9 86 A0010000  - fld dword ptr [esi+000001A0]  ;X距离差
+						     1A8   ;Y距离差
+						     1B0   ;物品名称指针
+ESI=051489E8
+
+鼠标悬停地面物品才会出现访问信息
+007326C9 - 8B 40 04  - mov eax,[eax+04] 
+EAX=051489E8
+[EAX]->EAX=3D78C138
+
+//
+00732696 - 8B 04 90   - mov eax,[eax+edx*4]
+EAX=3D78C138
+EDX=00000111				;该索引更新会更改
+[EAX]->EAX=3B9A8CC8
+
+			            14  当前地面物品数量
+			            18  物品数组的个数
+00732693 - 8B 41 1C  - mov eax,[ecx+1C] 物品数组
+EAX=3B9A8CC8
+ECX=24A4A8E0
+
+//地面物品的总属性
+0048F260 - 8B 48 28  - mov ecx,[eax+28] 
+ECX=24A4A8E0
+EAX=08BAA5D0
+
+0048F25A - 8B 45 10  - mov eax,[ebp+10] 
+EAX=08BAA5D0
+EBP=06570748
+
+[[基址]+1C]略
+
+使用CE查找未知值（地面物品与人物的距离），相对物品走近为减少，走远为增加逐步排除
+观察排除后的数据（近百条），根据走近走远数据的变化得到疑似的数据并查看范围这些数据的代码
+得到结果遍历各数据偏移推出其它数据
+=================================================================================================================
+其他玩家信息
+						      3C  ;X
+						      44  ;Y
+						     270  ;等级
+						     7E4  ;玩家名字指针
+						     等级 血、蓝、X,H,Y与自己偏移相同。命中攻击等为0
+007358D9 - D9 85 34100000  - fld dword ptr [ebp+00001034] 	     自己距离玩家的坐标差
+EBP=3E990280
+
+005158E1 - 8B 0C A8   - mov ecx,[eax+ebp*4]
+ECX=3E990280
+EBP=00000003
+EAX=06305330
+
+					        14  ;当前在线人数
+					        18  ;数组数量
+						（这里部分偏移与地面物品雷同，应该是一般化基类的继承实例）
+005158DB - 8B 83 AC000000  - mov eax,[ebx+000000AC] 
+EAX=06305330
+EBX=04C20180
+
+005158BA - 8B 58 20  - mov ebx,[eax+20]
+EBX=04C20180
+EAX=08A2AFE0
+
+[[[基址]+1C]+10]...略
+
+与地面物品找法一样.
+=================================================================================================================
+A-60~A-68的挂机部分仅是前面各个功能块代码的逻辑调用，代码中有实现，所以略过说明。
+=================================================================================================================
+
+=================================================================================================================
+=================================================================================================================
+=================================================================================================================
+=================================================================================================================
+=================================================================================================================

@@ -1,0 +1,4 @@
+LIBRARY			InjectLib.dll
+
+EXPORTS
+	GameCommand		@1			PRIVATE
